@@ -287,12 +287,8 @@ def guess_ext(fname, sniff_order, is_binary=False):
     Returns an extension that can be used in the datatype factory to
     generate a data for the 'fname' file
 
-    >>> from galaxy.datatypes import registry
-    >>> from galaxy.util.bunch import Bunch
-    >>> sample_conf = os.path.join(util.galaxy_directory(), "config", "datatypes_conf.xml.sample")
-    >>> config = Bunch(sniff_compressed_dynamic_datatypes_default=True)
-    >>> datatypes_registry = registry.Registry(config)
-    >>> datatypes_registry.load_datatypes(root_dir=util.galaxy_directory(), config=sample_conf)
+    >>> from galaxy.datatypes.registry import example_datatype_registry_for_sample
+    >>> datatypes_registry = example_datatype_registry_for_sample()
     >>> sniff_order = datatypes_registry.sniff_order
     >>> fname = get_test_fname('megablast_xml_parser_test1.blastxml')
     >>> guess_ext(fname, sniff_order)
@@ -464,6 +460,9 @@ def guess_ext(fname, sniff_order, is_binary=False):
     >>> fname = get_test_fname('1.phyloxml')
     >>> guess_ext(fname, sniff_order)
     'phyloxml'
+    >>> fname = get_test_fname('1.fastqsanger.gz')
+    >>> guess_ext(fname, sniff_order)  # See test_datatype_registry for more compressed type tests.
+    'fastqsanger.gz'
     """
     file_prefix = FilePrefix(fname)
     file_ext = run_sniffers_raw(file_prefix, sniff_order, is_binary)
@@ -616,13 +615,6 @@ def build_sniff_from_prefix(klass):
             if not file_prefix.compressed_format:
                 # This not a compressed file we are looking but the type expects it to be
                 # must return False.
-                return False
-
-            if not getattr(klass, "sniff_compressed", True) and not self.validate_mode():
-                # This datatype indicates that it shouldn't be auto-sniffed so return False.
-                # Do not take this shortcut if validate_mode is True, in that case we aren't
-                # trying to find a datatype for a file we are trying to verify a datatype
-                # selection and so should execute the underlying sniff_prefix.
                 return False
 
         if hasattr(self, "compressed_format"):
